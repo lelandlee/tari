@@ -1,5 +1,7 @@
-//https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
+//! Contains Mnemonic word lists from Bitcoin bip-0039 for ChineseSimplified, ChineseTraditional, English, French, Italian, Japanese, Korean and Spanish
+//! https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
 
+/// A mnemonic word list of 2048 characters for the Chinese Simplified language
 #[rustfmt::skip]
 pub const MNEMONIC_CHINESE_SIMPLIFIED_WORDS: [&'static str; 2048] = [
     "的", "一", "是", "在", "不", "了", "有", "和", "人", "这", "中", "大", "为", "上", "个", "国",
@@ -132,6 +134,7 @@ pub const MNEMONIC_CHINESE_SIMPLIFIED_WORDS: [&'static str; 2048] = [
     "祸", "丘", "玄", "溜", "曰", "逻", "彭", "尝", "卿", "妨", "艇", "吞", "韦", "怨", "矮", "歇",
 ];
 
+/// A mnemonic word list of 2048 characters for the Chinese Traditional language
 #[rustfmt::skip]
 pub const MNEMONIC_CHINESE_TRADITIONAL_WORDS: [&'static str; 2048] = [
     "的", "一", "是", "在", "不", "了", "有", "和", "人", "這", "中", "大", "為", "上", "個", "國",
@@ -264,6 +267,7 @@ pub const MNEMONIC_CHINESE_TRADITIONAL_WORDS: [&'static str; 2048] = [
     "禍", "丘", "玄", "溜", "曰", "邏", "彭", "嘗", "卿", "妨", "艇", "吞", "韋", "怨", "矮", "歇",
 ];
 
+/// A mnemonic word list of 2048 words from the English language
 #[rustfmt::skip]
 pub const MNEMONIC_ENGLISH_WORDS: [&'static str; 2048] = [
     "abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse", "access", "accident", "account", "accuse", "achieve", "acid",
@@ -396,6 +400,7 @@ pub const MNEMONIC_ENGLISH_WORDS: [&'static str; 2048] = [
     "wrap", "wreck", "wrestle", "wrist", "write", "wrong", "yard", "year", "yellow", "you", "young", "youth", "zebra", "zero", "zone", "zoo",
 ];
 
+/// A mnemonic word list of 2048 words from the French language
 #[rustfmt::skip]
 pub const MNEMONIC_FRENCH_WORDS: [&'static str; 2048] = [
     "abaisser", "abandon", "abdiquer", "abeille", "abolir", "aborder", "aboutir", "aboyer", "abrasif", "abreuver", "abriter", "abroger", "abrupt", "absence", "absolu", "absurde",
@@ -528,6 +533,7 @@ pub const MNEMONIC_FRENCH_WORDS: [&'static str; 2048] = [
     "volcan", "voltiger", "volume", "vorace", "vortex", "voter", "vouloir", "voyage", "voyelle", "wagon", "xénon", "yacht", "zèbre", "zénith", "zeste", "zoologie",
 ];
 
+/// A mnemonic word list of 2048 words from the Italian language
 #[rustfmt::skip]
 pub const MNEMONIC_ITALIAN_WORDS: [&'static str; 2048] = [
     "abaco", "abbaglio", "abbinato", "abete", "abisso", "abolire", "abrasivo", "abrogato", "accadere", "accenno", "accusato", "acetone", "achille", "acido", "acqua", "acre",
@@ -660,6 +666,7 @@ pub const MNEMONIC_ITALIAN_WORDS: [&'static str; 2048] = [
     "zavorra", "zefiro", "zelante", "zelo", "zenzero", "zerbino", "zibetto", "zinco", "zircone", "zitto", "zolla", "zotico", "zucchero", "zufolo", "zulu", "zuppa",
 ];
 
+/// A mnemonic word list of 2048 words from the Japanese language
 #[rustfmt::skip]
 pub const MNEMONIC_JAPANESE_WORDS: [&'static str; 2048] = [
     "あいこくしん", "あいさつ", "あいだ", "あおぞら", "あかちゃん", "あきる", "あけがた", "あける", "あこがれる", "あさい", "あさひ", "あしあと", "あじわう", "あずかる", "あずき", "あそぶ",
@@ -792,6 +799,7 @@ pub const MNEMONIC_JAPANESE_WORDS: [&'static str; 2048] = [
     "ろてん", "ろめん", "ろれつ", "ろんぎ", "ろんぱ", "ろんぶん", "ろんり", "わかす", "わかめ", "わかやま", "わかれる", "わしつ", "わじまし", "わすれもの", "わらう", "われる",
 ];
 
+/// A mnemonic word list of 2048 words from the Korean language
 #[rustfmt::skip]
 pub const MNEMONIC_KOREAN_WORDS: [&'static str; 2048] = [
     "가격", "가끔", "가난", "가능", "가득", "가르침", "가뭄", "가방", "가상", "가슴", "가운데", "가을", "가이드", "가입", "가장", "가정",
@@ -924,6 +932,7 @@ pub const MNEMONIC_KOREAN_WORDS: [&'static str; 2048] = [
     "훨씬", "휴식", "휴일", "흉내", "흐름", "흑백", "흑인", "흔적", "흔히", "흥미", "흥분", "희곡", "희망", "희생", "흰색", "힘껏",
 ];
 
+/// A mnemonic word list of 2048 words from the Spanish language
 #[rustfmt::skip]
 pub const MNEMONIC_SPANISH_WORDS: [&'static str; 2048] = [
     "ábaco", "abdomen", "abeja", "abierto", "abogado", "abono", "aborto", "abrazo", "abrir", "abuelo", "abuso", "acabar", "academia", "acceso", "acción", "aceite",
