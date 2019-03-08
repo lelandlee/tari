@@ -24,16 +24,9 @@ use crypto::common::ByteArray;
 use crypto::keys::SecretKeyFactory;
 use crypto::ristretto::RistrettoSecretKey as SecretKey;
 use rand;
-
+use common::*;
 use crypto::common::ByteArrayError;
-use sha2::{Digest, Sha256};
 
-//Move to correct place
-pub fn sha256(input_vec: Vec<u8>) -> Vec<u8> {
-    let mut h = Sha256::new();
-    h.input(input_vec);
-    (h.result().to_vec())
-}
 
 pub fn generate_private_key() -> SecretKey {
     let mut rng = rand::OsRng::new().unwrap();

@@ -5,4 +5,5 @@ extern crate derive_error;
 
 pub mod keymanager;
 pub mod mnemonic_wordlists;
-pub mod mnemonicmanager;
+pub mod mnemonic;
+pub mod common;
