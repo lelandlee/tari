@@ -30,12 +30,12 @@ use tari_core::transaction::{TransactionKernel, TransactionOutput};
 type BlockHash = Blake2b;
 
 pub struct BlockchainState {
-    outputs: MerkleMountainRange<TransactionOutput, BlockHash>,
-    kernals: MerkleMountainRange<TransactionKernel, BlockHash>,
+    _outputs: MerkleMountainRange<TransactionOutput, BlockHash>,
+    _kernals: MerkleMountainRange<TransactionKernel, BlockHash>,
 }
 
 impl BlockchainState {
     pub fn new() -> BlockchainState {
-        BlockchainState { outputs: MerkleMountainRange::new(), kernals: MerkleMountainRange::new() }
+        BlockchainState { _outputs: MerkleMountainRange::new(), _kernals: MerkleMountainRange::new() }
     }
 }
