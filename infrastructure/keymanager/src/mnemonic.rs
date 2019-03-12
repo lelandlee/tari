@@ -20,6 +20,9 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 // USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+/// The Mnemonic system simplifies the encoding and decoding of a secret key into and from a Mnemonic word sequence
+/// It can autodetect the language of the Mnemonic word sequence
+
 use mnemonic_wordlists::*;
 use common::*;
 use std::slice::Iter;
@@ -140,18 +143,18 @@ pub fn from_bytes(bytes: Vec<u8>, language: &MnemonicLanguage) -> Result<Vec<Str
     (Ok(mnemonic_sequence))
 }
 
-///
+/// Generates a mnemonic sequence of words from the provided secret key
 pub fn from_secretkey(k: &SecretKey, language: &MnemonicLanguage) -> Result<Vec<String>, MnemonicError> {
     (from_bytes(k.to_vec(),language))
 }
 
-///
+/// Generates a mnemonic sequence of words from a vector of bytes, the language of the mnemonic sequence is autodetected
 pub fn to_bytes(mnemonic_seq: &Vec<String>) -> Result<Vec<u8>, MnemonicError> {
     let language=MnemonicLanguage::from(&mnemonic_seq[0])?; //Autodetect language
     (to_bytes_with_language(mnemonic_seq, &language))
 }
 
-///
+/// Generates a mnemonic sequence of words from a vector of bytes using the specified language
 pub fn to_bytes_with_language(mnemonic_seq: &Vec<String>, language: &MnemonicLanguage) -> Result<Vec<u8>, MnemonicError> {
     let mut bits:Vec<bool>=Vec::new();
     for curr_word in mnemonic_seq {
@@ -166,6 +169,8 @@ pub fn to_bytes_with_language(mnemonic_seq: &Vec<String>, language: &MnemonicLan
     Ok(bits_to_bytes(&bits))
 }
 
+//TODO number of bits or words specify 12 or 24 mnemonic words
+
 ///
 /*pub fn to_secretkey_with_language(mnemonic_seq: &Vec<String>, language: &MnemonicLanguage) -> Result<SecretKey, MnemonicError> {
     let bytes=to_bytes_with_language(mnemonic_seq,language)?;
@@ -175,63 +180,23 @@ pub fn to_bytes_with_language(mnemonic_seq: &Vec<String>, language: &MnemonicLan
     }
 }*/
 
-
-/// The MnemonicManager simplifies the encoding and decoding of a a secret key into and from a Mnemonic word sequence
-/// It can auto detect the language of the Mnemonic word sequence
-/*pub struct MnemonicManager {
-    pub language: Option<MnemonicLanguage>,
-}*/
-
-//impl MnemonicManager {
-    /*
-    /// Construct a new MnemonicManager when the mnemonic language is unknown
-    pub fn new() -> MnemonicManager {
-        MnemonicManager { language: None }
+/*
+pub fn to_secretkey(mnemonic_seq: &Vec<String>) -> Result<SecretKey, MnemonicError> {
+    let bytes=to_bytes_with_language(mnemonic_seq,language)?;
+    match SecretKey::from_bytes(&bytes) {
+        Ok(k) => Ok(k),
+        Err(e) => Err(e),
     }
-
-    /// Creates a new MnemonicManager when the mnemonic language is known
-    pub fn from(language: MnemonicLanguage) -> MnemonicManager {
-        MnemonicManager { language: Some(language) }
-    }
-
-    /// Finds the corresponding mnemonic word list that contains the specified word and uses the detected language to set the language of the MnemonicManager
-    pub fn from_word(mnemonic_word: &String) -> Result<MnemonicManager, MnemonicError> {
-        match MnemonicLanguage::from(mnemonic_word) {
-            Ok(detected_language) => Ok(MnemonicManager::from(detected_language)),
-            Err(err) => Err(err),
-        }
-    }
-
-    pub fn to_mnemonic(&self, k: &SecretKey) -> Result<Vec<String>, MnemonicError> {
-        match &self.language {
-            Some(language) => convert_bytes_to_mnemonic_seq(k.to_vec(),language),
-            None => Err(MnemonicError::LanguageUndefined),
-        }
-    }
-
-    pub fn to_bytes(&mut self, mnemonic_seq: &Vec<String>) -> Result<Vec<u8>, MnemonicError> {
-        if self.language.is_none() { //Language not defined, then autodetect language
-            self.language=Some(MnemonicLanguage::from(&mnemonic_seq[0])?);
-        }
-        match &self.language {
-            Some(language) => convert_mnemonic_seq_to_bytes(mnemonic_seq, language),
-            None => Err(MnemonicError::UnknownLanguage),
-        }
-    }*/
-
-    /*pub fn to_secretkey(&mut self, mnemonic_seq: &Vec<String>) -> Result<SecretKey, MnemonicError> {
-        let bytes=self.to_bytes(mnemonic_seq)?;
-        (Ok(SecretKey::from_bytes(&bytes)))
-    }*/
-
-//}
-
+}
+*/
 
 #[cfg(test)]
 mod test {
     use super::*;
-    //use crypto::common::ByteArray;
     use mnemonic;
+
+
+
 
     #[test]
     fn test_mnemonic() {

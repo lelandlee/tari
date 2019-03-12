@@ -20,6 +20,8 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 // USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+// A new derived key for a specific index can be generated as derived_key=SHA256(master_key||branch_seed||index)
+
 use crypto::common::ByteArray;
 use crypto::keys::SecretKeyFactory;
 use crypto::ristretto::RistrettoSecretKey as SecretKey;
@@ -27,62 +29,56 @@ use rand;
 use common::*;
 use crypto::common::ByteArrayError;
 
-
-pub fn generate_private_key() -> SecretKey {
-    let mut rng = rand::OsRng::new().unwrap();
-    (SecretKey::random(&mut rng))
+pub struct DerivedKey {
+    pub k: SecretKey,
+    pub key_index:usize,
 }
 
+
 pub struct KeyManager {
-    master_key: SecretKey,
-    derived_keys: Vec<SecretKey>,
+    pub master_key: SecretKey,
+    pub branch_seed: String,
+    pub primary_key_index:usize,
 }
 
 impl KeyManager {
     pub fn new() -> KeyManager {
-        KeyManager { master_key: generate_private_key(), derived_keys: Vec::new() }
+        let mut rng = rand::OsRng::new().unwrap();
+        KeyManager { master_key: SecretKey::random(&mut rng),branch_seed:"".to_string(), primary_key_index: 0 }
     }
 
-    pub fn from(master_key: SecretKey) -> KeyManager {
-        KeyManager { master_key, derived_keys: Vec::new() }
+    pub fn from(master_key: SecretKey,branch_seed: String,primary_key_index: usize) -> KeyManager {
+        KeyManager { master_key,branch_seed, primary_key_index }
     }
 
-    pub fn from_seed(seed: String) -> KeyManager {
+    /*pub fn from_seed(seed: String) -> KeyManager {
         KeyManager {
             master_key: SecretKey::from_bytes(sha256(seed.into_bytes()).as_slice()).unwrap(),
-            derived_keys: Vec::new(),
+            primary_key_index:0,
         }
-    }
-
-    /*pub fn from_mnemonic(master_key: SecretKey) -> KeyManager {
-        KeyManager { master_key, derived_keys: Vec::new() }
     }*/
 
-    //TODO fix index out of order issue
 
-    // Derived keys are generated as derived_key=SHA256(master_key||index)
-    pub fn derive_key(&mut self, index: usize) -> Result<SecretKey, ByteArrayError> {
-        //Check if key already derived and then return new or previously derived key
-        if index < self.derived_keys.len() {
-            Ok(self.derived_keys[index])
-        } else {
-            (self.derive_next_key())
+    //TODO initialize master key from mnemonic key
+    pub fn from_mnemonic(mnemonic_seq: &Vec<String>) -> KeyManager {
+
+    }
+
+    // Derived keys are generated as derived_key=SHA256(master_key||branch_seed||index)
+    pub fn derive_key(&self, key_index: usize) -> Result<DerivedKey, ByteArrayError> {
+        let concatenated = format!("{}{}", self.master_key.to_hex(), key_index.to_string());
+        match SecretKey::from_bytes(sha256(concatenated.into_bytes()).as_slice()) {
+            Ok(k) => Ok(DerivedKey { k, key_index}),
+            Err(err) => Err(err),
         }
     }
 
-    pub fn derive_next_key(&mut self) -> Result<SecretKey, ByteArrayError> {
-        let index = self.derived_keys.len();
-        let combined = format!("{}{}", self.master_key.to_hex(), index.to_string());
-        match SecretKey::from_bytes(sha256(combined.into_bytes()).as_slice()) {
-            Ok(derived_key) => {
-                self.derived_keys.push(derived_key);
-                Ok(derived_key)
-            }
-            Err(e) => Err(e),
-        }
+    pub fn next_key(&mut self) -> Result<DerivedKey, ByteArrayError> {
+        self.primary_key_index+=1;
+        (self.derive_key(self.primary_key_index))
     }
 
-    //TODO initialize master key from mnumonic key
+
 
     //TODO save to file
 
