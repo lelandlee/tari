@@ -1,4 +1,4 @@
-// Copyright 2018 The Tari Project
+// Copyright 2019 The Tari Project
 //
 // Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 // following conditions are met:
@@ -22,20 +22,28 @@
 
 // This file is used to store the current blockchain state
 
-use blake2::Blake2b;
+
 /// The BlockchainState struct keeps record of the current UTXO, total kernels and headers.
 use merklemountainrange::mmr::*;
 use tari_core::transaction::{TransactionKernel, TransactionOutput};
+use tari_core::block::Block;
+use tari_core::blockheader::BlockHeader;
+use tari_core::types::Hasher;
 
-type BlockHash = Blake2b;
 
 pub struct BlockchainState {
-    _outputs: MerkleMountainRange<TransactionOutput, BlockHash>,
-    _kernals: MerkleMountainRange<TransactionKernel, BlockHash>,
+    _outputs: MerkleMountainRange<TransactionOutput, Hasher>,
+    _kernals: MerkleMountainRange<TransactionKernel, Hasher>,
+    _headers: MerkleMountainRange<BlockHeader, Hasher>,
 }
 
 impl BlockchainState {
+    /// This function creates a new blockchainstate, this will keep track of the current state of the blockchain.
     pub fn new() -> BlockchainState {
-        BlockchainState { _outputs: MerkleMountainRange::new(), _kernals: MerkleMountainRange::new() }
+        BlockchainState { _outputs: MerkleMountainRange::new(), _kernals: MerkleMountainRange::new(), _headers::MerkleMountainRange::new(), }
     }
+
+/// This function consumes a new block
+/// The if it returns OK(), the block was accepted and proccessed, else it returns an error why the block was rejected
+    pub fn add_block(new_block : Block) -> Result<_,BlockProrror>
 }

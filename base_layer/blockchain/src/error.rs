@@ -28,3 +28,8 @@ use derive_error::Error;
 pub enum ChainError {
     Brokenchain, // place holder for real error
 }
+
+#[derive(Debug, Error)]
+pub enum BlockProcError {
+    Invalid_block, // place holder for real error
+}

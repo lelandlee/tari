@@ -25,6 +25,8 @@
 
 use crate::{pow::ProofOfWork, types::BlindingFactor};
 use chrono::{DateTime, Utc};
+use merklemountainrange::merklenode::Hashable;
+use types::Hasher;
 
 type BlockHash = [u8; 32];
 
@@ -55,5 +57,15 @@ impl BlockHeader {
     /// This function will validate the proof of work in the header
     pub fn validate_pow(&self) -> bool {
         unimplemented!();
+    }
+}
+
+/// Implement the canonical hashing function for blockheader
+impl Hashable for TransactionInput {
+    fn hash(&self) -> Vec<u8> {
+        let mut hasher = Hasher::new();
+        hasher.input(vec![self.features.bits]);
+        hasher.input(self.commitment.to_bytes());
+        hasher.result().to_vec()
     }
 }
