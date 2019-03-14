@@ -29,44 +29,44 @@ pub fn sha256(input_vec: Vec<u8>) -> Vec<u8> {
 }
 
 /// Converts a single input integer to a vector of bits
-pub fn uint_to_bits(value:usize,bit_count:usize) -> Vec<bool> {
-    let mut bits: Vec<bool>=Vec::new();
-    let mut v=value;
+pub fn uint_to_bits(value: usize, bit_count: usize) -> Vec<bool> {
+    let mut bits: Vec<bool> = Vec::new();
+    let mut v = value;
     for _i in 0..bit_count {
-        bits.push(v%2>0);
-        v=v/2;
+        bits.push(v % 2 > 0);
+        v = v / 2;
     }
     bits.reverse();
     (bits)
 }
 
 /// Converts a vector of input bits to its integer representation
-pub fn bits_to_uint(bits:&Vec<bool>) -> usize {
-    let mut value:usize=0;
+pub fn bits_to_uint(bits: &Vec<bool>) -> usize {
+    let mut value: usize = 0;
     for i in 0..bits.len() {
-        value+=(bits[i] as usize)*(2 as usize).pow((bits.len()-i-1) as u32);
+        value += (bits[i] as usize) * (2 as usize).pow((bits.len() - i - 1) as u32);
     }
     (value)
 }
 
 /// Converts a vector of input bytes to a vector of bits
-pub fn bytes_to_bits(bytes:&Vec<u8>) -> Vec<bool> {
-    let mut bits:Vec<bool>=Vec::new();
+pub fn bytes_to_bits(bytes: &Vec<u8>) -> Vec<bool> {
+    let mut bits: Vec<bool> = Vec::new();
     for curr_byte in bytes.iter() {
-        let curr_bits = uint_to_bits(*curr_byte as usize,8);
+        let curr_bits = uint_to_bits(*curr_byte as usize, 8);
         bits.extend(curr_bits.iter().map(|&i| i));
     }
     (bits)
 }
 
 /// Converts a vector of bits to a vector of bytes
-pub fn bits_to_bytes(bits:&Vec<bool>) -> Vec<u8> {
-    let mut bytes:Vec<u8>=Vec::new();
-    let group_bit_count=8;
-    for i in 0..bits.len()/group_bit_count {
-        let start_index=i*group_bit_count;
-        let stop_index=start_index+group_bit_count;
+pub fn bits_to_bytes(bits: &Vec<bool>) -> Vec<u8> {
+    let mut bytes: Vec<u8> = Vec::new();
+    let group_bit_count = 8;
+    for i in 0..bits.len() / group_bit_count {
+        let start_index = i * group_bit_count;
+        let stop_index = start_index + group_bit_count;
         bytes.push(bits_to_uint(&bits[start_index..stop_index].to_vec()) as u8);
-    };
+    }
     (bytes)
 }
