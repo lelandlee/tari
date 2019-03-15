@@ -27,9 +27,7 @@ use crypto::{
     common::Blake256,
     ristretto::{
         pedersen::{PedersenBaseOnRistretto255, PedersenOnRistretto255},
-        RistrettoPublicKey,
-        RistrettoSchnorr,
-        RistrettoSecretKey,
+        RistrettoPublicKey, RistrettoSchnorr, RistrettoSecretKey,
     },
 };
 

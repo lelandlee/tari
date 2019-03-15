@@ -97,7 +97,7 @@ impl DataStore for LMDBStore {
             Some(db) => {
                 self.curr_db = db.clone();
                 Ok(())
-            },
+            }
             None => Err(DatastoreError::UnknownDatabase),
         }
     }
@@ -284,12 +284,12 @@ mod test {
         match store.put_raw(b"key2", make_vector(600_000)).unwrap_err() {
             DatastoreError::InternalError(s) => {
                 assert_eq!(s, "LMDB Error: MDB_MAP_FULL: Environment mapsize limit reached");
-            },
+            }
             err => {
                 println!("{:?}", err);
                 assert!(fs::remove_dir_all("./tests/test_overflow").is_ok());
                 panic!()
-            },
+            }
         }
         assert!(fs::remove_dir_all("./tests/test_overflow").is_ok());
     }

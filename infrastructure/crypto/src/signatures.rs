@@ -40,11 +40,7 @@ where
         P::from_secret_key(&self.signature)
     }
 
-    pub fn sign<'a, 'b, D: Digest>(
-        secret: K,
-        nonce: K,
-        challenge: Challenge<D>,
-    ) -> Result<Self, SchnorrSignatureError>
+    pub fn sign<'a, 'b, D: Digest>(secret: K, nonce: K, challenge: Challenge<D>) -> Result<Self, SchnorrSignatureError>
     where
         K: Add<Output = K> + Mul<P, Output = P> + Mul<Output = K>,
     {
@@ -60,7 +56,9 @@ where
     }
 
     pub fn verify<'a, D: Digest>(&self, public_key: &'a P, challenge: Challenge<D>) -> bool
-    where K: Mul<&'a P, Output = P> {
+    where
+        K: Mul<&'a P, Output = P>,
+    {
         let lhs = self.calc_signature_verifier();
         let e = match K::from_vec(&challenge.hash()) {
             Ok(e) => e,

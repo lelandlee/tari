@@ -252,8 +252,7 @@ impl Transaction {
         outputs: Vec<TransactionOutput>,
         kernels: Vec<TransactionKernel>,
         offset: BlindingFactor,
-    ) -> Transaction
-    {
+    ) -> Transaction {
         Transaction { base, offset, body: AggregateBody::new(inputs, outputs, kernels) }
     }
 
@@ -262,8 +261,8 @@ impl Transaction {
         let fee_commitment = Commitment::new(&Scalar::zero(), &Scalar::from(fees), self.base);
 
         let outputs_minus_inputs =
-            &self.body.outputs.iter().fold(Commitment::zero(self.base), |acc, val| &acc + &val.commitment) -
-                &self.body.inputs.iter().fold(Commitment::zero(self.base), |acc, val| &acc + &val.commitment);
+            &self.body.outputs.iter().fold(Commitment::zero(self.base), |acc, val| &acc + &val.commitment)
+                - &self.body.inputs.iter().fold(Commitment::zero(self.base), |acc, val| &acc + &val.commitment);
 
         &outputs_minus_inputs + &fee_commitment
     }
