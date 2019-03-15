@@ -46,6 +46,7 @@ pub enum MnemonicError {
 }
 
 impl From<ByteArrayError> for MnemonicError {
+    /// Converts from ByteArrayError to MnemonicError
     fn from(_e: ByteArrayError) -> Self {
         MnemonicError::ByteArrayError
     }

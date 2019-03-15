@@ -1,3 +1,7 @@
+extern crate serde;
+extern crate serde_derive;
+extern crate serde_json;
+
 pub mod challenge;
 pub mod commitment;
 pub mod common;
