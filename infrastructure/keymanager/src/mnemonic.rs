@@ -24,12 +24,13 @@ use common::*;
 use crypto::common::{ByteArray, ByteArrayError};
 use crypto::ristretto::RistrettoSecretKey as SecretKey;
 use derive_error::Error;
-/// The Mnemonic system simplifies the encoding and decoding of a secret key into and from a Mnemonic word sequence
-/// It can autodetect the language of the Mnemonic word sequence
-//TODO: replace special charracters with common charracters
-//TODO: think how language autodetection can work with ChineseTraditional and ChineseSimplified
 use mnemonic_wordlists::*;
 use std::slice::Iter;
+
+/// The Mnemonic system simplifies the encoding and decoding of a secret key into and from a Mnemonic word sequence
+/// It can autodetect the language of the Mnemonic word sequence
+//TODO: Replace special characters of wordsets and input strings with common characters
+//TODO: Develop a language autodetection mechanism to distinguish between ChineseTraditional and ChineseSimplified
 
 #[derive(Debug, Error)]
 pub enum MnemonicError {

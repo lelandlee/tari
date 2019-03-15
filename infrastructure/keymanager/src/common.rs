@@ -22,6 +22,7 @@
 
 use sha2::{Digest, Sha256};
 
+//TODO: Replace hash algorithm with consolidated hash system
 pub fn sha256(input_vec: Vec<u8>) -> Vec<u8> {
     let mut h = Sha256::new();
     h.input(input_vec);

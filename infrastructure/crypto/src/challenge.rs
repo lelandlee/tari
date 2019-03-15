@@ -71,7 +71,8 @@ impl<D: Digest> Challenge<D> {
 }
 
 impl<D> From<Challenge<D>> for Challenge256Bit
-where D: Digest + FixedOutput<OutputSize = U32>
+where
+    D: Digest + FixedOutput<OutputSize = U32>,
 {
     fn from(challenge: Challenge<D>) -> Challenge256Bit {
         let mut v = [0u8; 32];

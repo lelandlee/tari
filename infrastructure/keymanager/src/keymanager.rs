@@ -20,8 +20,6 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 // USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// A new derived key for a specific index can be generated as derived_key=SHA256(master_key||branch_seed||index)
-
 use common::*;
 use crypto::common::ByteArray;
 use crypto::common::ByteArrayError;
@@ -30,14 +28,9 @@ use crypto::ristretto::RistrettoSecretKey as SecretKey;
 use derive_error::Error;
 use mnemonic::*;
 use rand;
-
-
 use std::fs::File;
 use std::io::prelude::*;
-
-//use serde::{Serialize, Deserialize};
-//use serde::ser::{Serialize, SerializeStruct, Serializer};
-//use serde::de::{Deserialize, Deserializer, Visitor, SeqAccess, MapAccess};
+use std::io::ErrorKind;
 
 #[derive(Debug, Error)]
 pub enum KeyManagerError {
@@ -45,6 +38,12 @@ pub enum KeyManagerError {
     ByteArrayError,
     // Could not convert provided Mnemonic into master key
     DecodeMnemonic,
+    // The specified backup file could not be opened
+    FileOpen,
+    // Could not read from backup file
+    FileRead,
+    // Problem deserializing JSON into a new KeyManager
+    Deserialize,
 }
 
 impl From<ByteArrayError> for KeyManagerError {
@@ -67,61 +66,12 @@ pub struct DerivedKey {
     pub key_index: usize,
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct KeyManager {
     pub master_key: SecretKey,
     pub branch_seed: String,
     pub primary_key_index: usize,
 }
-/*
-impl Serialize for KeyManager {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("KeyManager", 3)?;
-        state.serialize_field("master_key", &self.master_key.to_hex())?;
-        state.serialize_field("branch_seed", &self.branch_seed)?;
-        state.serialize_field("primary_key_index", &self.primary_key_index)?;
-        state.end()
-    }
-}
-
-impl Deserialize for KeyManager  {
-   fn deserialize<D>(deserializer: D) -> Result<KeyManager, D::Error>
-        where
-            D: Deserializer<'de>,
-    {
-
-        deserializer.visit(TimeVisitor)
-        //deserializer.deserialize_string()(I32Visitor)
-    }
-}
-
-
-struct KeyVisitor;
-
-impl Visitor for KeyVisitor {
-    type Value = MyTime;
-
-    fn visit_string<E>(&mut self, str_data: String) -> Result<MyTime, E>
-        where E: serde::de::Error,
-    {
-        // Vamos con un strptime() con nuestro formato y vemos que paso
-        match time::strptime(&str_data, "%d/%m/%Y %X%z")
-            {
-                // Todo ok, convertimos al Timespec
-                Ok(parsed_time) => Ok(MyTime::new(parsed_time.to_timespec())),
-
-                // Hubo un problema, formatearlo y pasarlo a serde
-                Err(parse_error) => Err(serde::de::Error::syntax(&format!(
-                    "time parser error: {}", parse_error)))
-            }
-    }
-}*/
-
-
-
 
 impl KeyManager {
     /// Creates a new KeyManager with a new randomly selected master_key
@@ -159,6 +109,23 @@ impl KeyManager {
         }
     }
 
+    //TODO: file should be decrypted using Salsa20 or ChaCha20
+    /// Load KeyManager state from backup file
+    pub fn from_file(filename: &String) -> Result<KeyManager, KeyManagerError> {
+        let mut file_handle = match File::open(&filename) {
+            Ok(file) => file,
+            Err(_e) => return Err(KeyManagerError::FileOpen),
+        };
+        let mut file_content = String::new();
+        match file_handle.read_to_string(&mut file_content) {
+            Ok(_) => match serde_json::from_str(&file_content) {
+                Ok(km) => Ok(km),
+                Err(_) => Err(KeyManagerError::Deserialize),
+            },
+            Err(_) => Err(KeyManagerError::FileRead),
+        }
+    }
+
     /// Derive a new private key from master key: derived_key=SHA256(master_key||branch_seed||index)
     pub fn derive_key(&self, key_index: usize) -> Result<DerivedKey, ByteArrayError> {
         let concatenated = format!("{}{}", self.master_key.to_hex(), key_index.to_string());
@@ -174,33 +141,25 @@ impl KeyManager {
         (self.derive_key(self.primary_key_index))
     }
 
-
-
-    //TODO save to file
-    //TODO change into EncryptedFile trait
-    pub fn save_file(&self, filename: String) -> std::io::Result<()> {
-
-
-        let mut file = File::create(filename)?;
-
-
-        let json_data = serde_json::to_string_pretty(&self).unwrap();
-        println!("{}",json_data);
-
-
-
-
-        file.write_all(json_data.as_bytes())?;
-
-        Ok(())
+    //TODO: file should be encrypted using Salsa20 or ChaCha20
+    //TODO: to_file can made into a reusable trait for other structs
+    /// Backup KeyManager state in file specified by filename
+    pub fn to_file(&self, filename: &String) -> std::io::Result<()> {
+        let mut file_handle = File::create(filename)?;
+        match serde_json::to_string(&self) {
+            Ok(json_data) => {
+                file_handle.write_all(json_data.as_bytes())?;
+                Ok(())
+            }
+            Err(_) => Err(std::io::Error::new(ErrorKind::Other, "JSON parse error")),
+        }
     }
-
-    //TODO load from file
 }
 
 #[cfg(test)]
 mod test {
     use keymanager::*;
+    use std::fs::remove_file;
 
     #[test]
     fn test_new_keymanager() {
@@ -261,11 +220,15 @@ mod test {
         let desired_key_index2 = 2;
         let derived_key1_result = km.derive_key(desired_key_index1);
         let derived_key2_result = km.derive_key(desired_key_index2);
-        if next_key1_result.is_ok() && next_key2_result.is_ok() && derived_key1_result.is_ok() && derived_key2_result.is_ok() {
-            let next_key1=next_key1_result.unwrap();
-            let next_key2=next_key2_result.unwrap();
-            let derived_key1=derived_key1_result.unwrap();
-            let derived_key2=derived_key2_result.unwrap();
+        if next_key1_result.is_ok()
+            && next_key2_result.is_ok()
+            && derived_key1_result.is_ok()
+            && derived_key2_result.is_ok()
+        {
+            let next_key1 = next_key1_result.unwrap();
+            let next_key2 = next_key2_result.unwrap();
+            let derived_key1 = derived_key1_result.unwrap();
+            let derived_key2 = derived_key2_result.unwrap();
             assert_ne!(next_key1.k, next_key2.k);
             assert_eq!(next_key1.k, derived_key1.k);
             assert_eq!(next_key2.k, derived_key2.k);
@@ -275,13 +238,20 @@ mod test {
     }
 
     #[test]
-    fn test_save_file() {
+    fn test_to_file_and_from_file() {
+        let desired_km = KeyManager::new();
+        let backup_filename = "test_km_backup.json".to_string();
+        //Backup KeyManager to file
+        desired_km.to_file(&backup_filename);
+        //Restore KeyManager from file
+        match KeyManager::from_file(&backup_filename) {
+            Ok(backup_km) => {
+                //Remove temp keymanager backup file
+                remove_file(backup_filename).unwrap();
 
-        let km =KeyManager::new();
-
-        km.save_file("test.txt".to_string());
-
-
-        assert!(false);
+                assert_eq!(desired_km, backup_km);
+            }
+            Err(_e) => assert!(false),
+        };
     }
 }
