@@ -32,15 +32,24 @@ use tari_core::types::Hasher;
 
 
 pub struct BlockchainState {
+<<<<<<< HEAD
     _outputs: MerkleMountainRange<TransactionOutput, Hasher>,
     _kernals: MerkleMountainRange<TransactionKernel, Hasher>,
     _headers: MerkleMountainRange<BlockHeader, Hasher>,
+=======
+    _outputs: MerkleMountainRange<TransactionOutput, BlockHash>,
+    _kernels: MerkleMountainRange<TransactionKernel, BlockHash>,
+>>>>>>> SW-swop-transaction-to-mmr-hashable
 }
 
 impl BlockchainState {
     /// This function creates a new blockchainstate, this will keep track of the current state of the blockchain.
     pub fn new() -> BlockchainState {
+<<<<<<< HEAD
         BlockchainState { _outputs: MerkleMountainRange::new(), _kernals: MerkleMountainRange::new(), _headers::MerkleMountainRange::new(), }
+=======
+        BlockchainState { _outputs: MerkleMountainRange::new(), _kernels: MerkleMountainRange::new() }
+>>>>>>> SW-swop-transaction-to-mmr-hashable
     }
 
 /// This function consumes a new block
