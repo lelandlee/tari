@@ -56,7 +56,8 @@ impl AggregateBody {
         inputs: Vec<TransactionInput>,
         outputs: Vec<TransactionOutput>,
         kernels: Vec<TransactionKernel>,
-    ) -> AggregateBody {
+    ) -> AggregateBody
+    {
         AggregateBody { inputs, outputs, kernels }
     }
 

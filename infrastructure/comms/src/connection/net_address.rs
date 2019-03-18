@@ -74,7 +74,7 @@ mod test {
         macro_rules! check_addr_fail {
             ($addr:ident) => {
                 match $addr.err().unwrap() {
-                    NetAddressError::ParseFailed => {}
+                    NetAddressError::ParseFailed => {},
                     _ => panic!("Address parsing returned unexpected error type"),
                 }
             };

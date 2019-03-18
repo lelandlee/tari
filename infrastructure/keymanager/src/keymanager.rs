@@ -21,16 +21,18 @@
 // USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use common::*;
-use crypto::common::ByteArray;
-use crypto::common::ByteArrayError;
-use crypto::keys::SecretKeyFactory;
-use crypto::ristretto::RistrettoSecretKey as SecretKey;
+use crypto::{
+    common::{ByteArray, ByteArrayError},
+    keys::SecretKeyFactory,
+    ristretto::RistrettoSecretKey as SecretKey,
+};
 use derive_error::Error;
 use mnemonic::*;
 use rand;
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::ErrorKind;
+use std::{
+    fs::File,
+    io::{prelude::*, ErrorKind},
+};
 
 #[derive(Debug, Error)]
 pub enum KeyManagerError {
@@ -90,26 +92,29 @@ impl KeyManager {
         seed_phrase: String,
         branch_seed: String,
         primary_key_index: usize,
-    ) -> Result<KeyManager, KeyManagerError> {
+    ) -> Result<KeyManager, KeyManagerError>
+    {
         match SecretKey::from_bytes(sha256(seed_phrase.into_bytes()).as_slice()) {
             Ok(master_key) => Ok(KeyManager { master_key, branch_seed, primary_key_index }),
             Err(e) => Err(KeyManagerError::from(e)),
         }
     }
 
-    /// Creates a KeyManager from the provided sequence of mnemonic words, the language of the mnemonic sequence will be auto detected
+    /// Creates a KeyManager from the provided sequence of mnemonic words, the language of the mnemonic sequence will be
+    /// auto detected
     pub fn from_mnemonic(
         mnemonic_seq: &Vec<String>,
         branch_seed: String,
         primary_key_index: usize,
-    ) -> Result<KeyManager, KeyManagerError> {
+    ) -> Result<KeyManager, KeyManagerError>
+    {
         match SecretKey::from_mnemonic(mnemonic_seq) {
             Ok(master_key) => Ok(KeyManager { master_key, branch_seed, primary_key_index }),
             Err(e) => Err(KeyManagerError::from(e)),
         }
     }
 
-    //TODO: file should be decrypted using Salsa20 or ChaCha20
+    // TODO: file should be decrypted using Salsa20 or ChaCha20
     /// Load KeyManager state from backup file
     pub fn from_file(filename: &String) -> Result<KeyManager, KeyManagerError> {
         let mut file_handle = match File::open(&filename) {
@@ -141,8 +146,8 @@ impl KeyManager {
         (self.derive_key(self.primary_key_index))
     }
 
-    //TODO: file should be encrypted using Salsa20 or ChaCha20
-    //TODO: to_file can made into a reusable trait for other structs
+    // TODO: file should be encrypted using Salsa20 or ChaCha20
+    // TODO: to_file can made into a reusable trait for other structs
     /// Backup KeyManager state in file specified by filename
     pub fn to_file(&self, filename: &String) -> std::io::Result<()> {
         let mut file_handle = File::create(filename)?;
@@ -150,7 +155,7 @@ impl KeyManager {
             Ok(json_data) => {
                 file_handle.write_all(json_data.as_bytes())?;
                 Ok(())
-            }
+            },
             Err(_) => Err(std::io::Error::new(ErrorKind::Other, "JSON parse error")),
         }
     }
@@ -220,10 +225,10 @@ mod test {
         let desired_key_index2 = 2;
         let derived_key1_result = km.derive_key(desired_key_index1);
         let derived_key2_result = km.derive_key(desired_key_index2);
-        if next_key1_result.is_ok()
-            && next_key2_result.is_ok()
-            && derived_key1_result.is_ok()
-            && derived_key2_result.is_ok()
+        if next_key1_result.is_ok() &&
+            next_key2_result.is_ok() &&
+            derived_key1_result.is_ok() &&
+            derived_key2_result.is_ok()
         {
             let next_key1 = next_key1_result.unwrap();
             let next_key2 = next_key2_result.unwrap();
@@ -241,16 +246,16 @@ mod test {
     fn test_to_file_and_from_file() {
         let desired_km = KeyManager::new();
         let backup_filename = "test_km_backup.json".to_string();
-        //Backup KeyManager to file
+        // Backup KeyManager to file
         desired_km.to_file(&backup_filename);
-        //Restore KeyManager from file
+        // Restore KeyManager from file
         match KeyManager::from_file(&backup_filename) {
             Ok(backup_km) => {
-                //Remove temp keymanager backup file
+                // Remove temp keymanager backup file
                 remove_file(backup_filename).unwrap();
 
                 assert_eq!(desired_km, backup_km);
-            }
+            },
             Err(_e) => assert!(false),
         };
     }

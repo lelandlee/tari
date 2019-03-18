@@ -21,20 +21,23 @@
 // USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use common::*;
-use crypto::common::{ByteArray, ByteArrayError};
-use crypto::ristretto::RistrettoSecretKey as SecretKey;
+use crypto::{
+    common::{ByteArray, ByteArrayError},
+    ristretto::RistrettoSecretKey as SecretKey,
+};
 use derive_error::Error;
 use mnemonic_wordlists::*;
 use std::slice::Iter;
 
 /// The Mnemonic system simplifies the encoding and decoding of a secret key into and from a Mnemonic word sequence
 /// It can autodetect the language of the Mnemonic word sequence
-//TODO: Replace special characters of wordsets and input strings with common characters
-//TODO: Develop a language autodetection mechanism to distinguish between ChineseTraditional and ChineseSimplified
+// TODO: Replace special characters of wordsets and input strings with common characters
+// TODO: Develop a language autodetection mechanism to distinguish between ChineseTraditional and ChineseSimplified
 
 #[derive(Debug, Error)]
 pub enum MnemonicError {
-    // Only ChineseSimplified, ChineseTraditional, English, French, Italian, Japanese, Korean and Spanish are defined natural languages
+    // Only ChineseSimplified, ChineseTraditional, English, French, Italian, Japanese, Korean and Spanish are defined
+    // natural languages
     UnknownLanguage,
     // Only 2048 words for each language was selected to form Mnemonic word lists
     WordNotFound,
@@ -95,10 +98,11 @@ fn find_mnemonic_index_from_word(word: &String, language: &MnemonicLanguage) -> 
     let search_result: Result<usize, usize>;
     let lowercase_word = word.to_lowercase();
     match language {
-        //Search through languages are ordered according to the predominance (number of speakers in the world) of that language
+        // Search through languages are ordered according to the predominance (number of speakers in the world) of that
+        // language
         MnemonicLanguage::ChineseSimplified => {
             search_result = MNEMONIC_CHINESE_SIMPLIFIED_WORDS.binary_search(&lowercase_word.as_str())
-        }
+        },
         MnemonicLanguage::English => search_result = MNEMONIC_ENGLISH_WORDS.binary_search(&lowercase_word.as_str()),
         MnemonicLanguage::French => search_result = MNEMONIC_FRENCH_WORDS.binary_search(&lowercase_word.as_str()),
         MnemonicLanguage::Italian => search_result = MNEMONIC_ITALIAN_WORDS.binary_search(&lowercase_word.as_str()),
@@ -116,7 +120,7 @@ fn find_mnemonic_index_from_word(word: &String, language: &MnemonicLanguage) -> 
 fn find_mnemonic_word_from_index(index: usize, language: &MnemonicLanguage) -> Result<String, MnemonicError> {
     if index < MNEMONIC_ENGLISH_WORDS.len() {
         Ok(match language {
-            //Select word according to specified language
+            // Select word according to specified language
             MnemonicLanguage::ChineseSimplified => MNEMONIC_CHINESE_SIMPLIFIED_WORDS[index],
             MnemonicLanguage::English => MNEMONIC_ENGLISH_WORDS[index],
             MnemonicLanguage::French => MNEMONIC_FRENCH_WORDS[index],
@@ -135,12 +139,12 @@ fn find_mnemonic_word_from_index(index: usize, language: &MnemonicLanguage) -> R
 pub fn from_bytes(bytes: Vec<u8>, language: &MnemonicLanguage) -> Result<Vec<String>, MnemonicError> {
     let mut bits = bytes_to_bits(&bytes);
 
-    //Pad with zeros if length not devisable by 11
+    // Pad with zeros if length not devisable by 11
     let group_bit_count = 11;
     let padded_size = ((bits.len() as f32 / group_bit_count as f32).ceil() * group_bit_count as f32) as usize;
     bits.resize(padded_size, false);
 
-    //Group each set of 11 bits to form one mnemonic word
+    // Group each set of 11 bits to form one mnemonic word
     let mut mnemonic_sequence: Vec<String> = Vec::new();
     for i in 0..bits.len() / group_bit_count {
         let start_index = i * group_bit_count;
@@ -160,9 +164,10 @@ pub fn from_secretkey(k: &SecretKey, language: &MnemonicLanguage) -> Result<Vec<
     (from_bytes(k.to_vec(), language))
 }
 
-/// Generates a vector of bytes that represent the provided mnemonic sequence of words, the language of the mnemonic sequence is autodetected
+/// Generates a vector of bytes that represent the provided mnemonic sequence of words, the language of the mnemonic
+/// sequence is autodetected
 pub fn to_bytes(mnemonic_seq: &Vec<String>) -> Result<Vec<u8>, MnemonicError> {
-    let language = MnemonicLanguage::from(&mnemonic_seq[0])?; //Autodetect language
+    let language = MnemonicLanguage::from(&mnemonic_seq[0])?; // Autodetect language
     (to_bytes_with_language(mnemonic_seq, &language))
 }
 
@@ -170,18 +175,19 @@ pub fn to_bytes(mnemonic_seq: &Vec<String>) -> Result<Vec<u8>, MnemonicError> {
 pub fn to_bytes_with_language(
     mnemonic_seq: &Vec<String>,
     language: &MnemonicLanguage,
-) -> Result<Vec<u8>, MnemonicError> {
+) -> Result<Vec<u8>, MnemonicError>
+{
     let mut bits: Vec<bool> = Vec::new();
     for curr_word in mnemonic_seq {
         match find_mnemonic_index_from_word(curr_word, &language) {
             Ok(index) => {
                 let mut curr_bits = uint_to_bits(index, 11);
                 bits.extend(curr_bits.iter().map(|&i| i));
-            }
+            },
             Err(err) => return Err(err),
         }
     }
-    //Discard unused bytes
+    // Discard unused bytes
     let mut bytes = bits_to_bytes(&bits);
     for _i in 32..bytes.len() {
         bytes.pop();
@@ -194,7 +200,8 @@ pub fn to_bytes_with_language(
     }
 }
 
-/// Generates a SecretKey that represent the provided mnemonic sequence of words, the language of the mnemonic sequence is autodetected
+/// Generates a SecretKey that represent the provided mnemonic sequence of words, the language of the mnemonic sequence
+/// is autodetected
 pub fn to_secretkey(mnemonic_seq: &Vec<String>) -> Result<SecretKey, MnemonicError> {
     let bytes = to_bytes(mnemonic_seq)?;
     //(MnemonicError::from(SecretKey::from_bytes(&bytes)))
@@ -208,7 +215,8 @@ pub fn to_secretkey(mnemonic_seq: &Vec<String>) -> Result<SecretKey, MnemonicErr
 pub fn to_secretkey_with_language(
     mnemonic_seq: &Vec<String>,
     language: &MnemonicLanguage,
-) -> Result<SecretKey, MnemonicError> {
+) -> Result<SecretKey, MnemonicError>
+{
     let bytes = to_bytes_with_language(mnemonic_seq, language)?;
     match SecretKey::from_bytes(&bytes) {
         Ok(k) => Ok(k),
@@ -226,7 +234,8 @@ pub trait Mnemonic {
 }
 
 impl Mnemonic for SecretKey {
-    /// Generates a SecretKey that represent the provided mnemonic sequence of words, the language of the mnemonic sequence is autodetected
+    /// Generates a SecretKey that represent the provided mnemonic sequence of words, the language of the mnemonic
+    /// sequence is autodetected
     fn from_mnemonic(mnemonic_seq: &Vec<String>) -> Result<SecretKey, MnemonicError> {
         (to_secretkey(mnemonic_seq))
     }
@@ -235,7 +244,8 @@ impl Mnemonic for SecretKey {
     fn from_mnemonic_with_language(
         mnemonic_seq: &Vec<String>,
         language: &MnemonicLanguage,
-    ) -> Result<SecretKey, MnemonicError> {
+    ) -> Result<SecretKey, MnemonicError>
+    {
         (to_secretkey_with_language(mnemonic_seq, language))
     }
 
@@ -248,22 +258,20 @@ impl Mnemonic for SecretKey {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crypto::common::ByteArray;
-    use crypto::keys::SecretKeyFactory;
-    use crypto::ristretto::RistrettoSecretKey as SecretKey;
+    use crypto::{common::ByteArray, keys::SecretKeyFactory, ristretto::RistrettoSecretKey as SecretKey};
     use mnemonic;
     use rand;
 
     #[test]
     fn test_check_wordlists_sorted() {
         for i in 0..2047 {
-            if (MNEMONIC_CHINESE_SIMPLIFIED_WORDS[i] > MNEMONIC_CHINESE_SIMPLIFIED_WORDS[i + 1])
-                || (MNEMONIC_ENGLISH_WORDS[i] > MNEMONIC_ENGLISH_WORDS[i + 1])
-                || (MNEMONIC_FRENCH_WORDS[i] > MNEMONIC_FRENCH_WORDS[i + 1])
-                || (MNEMONIC_ITALIAN_WORDS[i] > MNEMONIC_ITALIAN_WORDS[i + 1])
-                || (MNEMONIC_JAPANESE_WORDS[i] > MNEMONIC_JAPANESE_WORDS[i + 1])
-                || (MNEMONIC_KOREAN_WORDS[i] > MNEMONIC_KOREAN_WORDS[i + 1])
-                || (MNEMONIC_SPANISH_WORDS[i] > MNEMONIC_SPANISH_WORDS[i + 1])
+            if (MNEMONIC_CHINESE_SIMPLIFIED_WORDS[i] > MNEMONIC_CHINESE_SIMPLIFIED_WORDS[i + 1]) ||
+                (MNEMONIC_ENGLISH_WORDS[i] > MNEMONIC_ENGLISH_WORDS[i + 1]) ||
+                (MNEMONIC_FRENCH_WORDS[i] > MNEMONIC_FRENCH_WORDS[i + 1]) ||
+                (MNEMONIC_ITALIAN_WORDS[i] > MNEMONIC_ITALIAN_WORDS[i + 1]) ||
+                (MNEMONIC_JAPANESE_WORDS[i] > MNEMONIC_JAPANESE_WORDS[i + 1]) ||
+                (MNEMONIC_KOREAN_WORDS[i] > MNEMONIC_KOREAN_WORDS[i + 1]) ||
+                (MNEMONIC_SPANISH_WORDS[i] > MNEMONIC_SPANISH_WORDS[i + 1])
             {
                 assert!(false);
             }
@@ -273,7 +281,7 @@ mod test {
 
     #[test]
     fn test_language_detection() {
-        //Test valid Mnemonic words
+        // Test valid Mnemonic words
         match MnemonicLanguage::from(&"目".to_string()) {
             Ok(language) => assert_eq!(language, MnemonicLanguage::ChineseSimplified),
             Err(_e) => assert!(false),
@@ -303,19 +311,19 @@ mod test {
             Err(_e) => assert!(false),
         }
 
-        //Test Invalid Mnemonic words
-        assert!(MnemonicLanguage::from(&"馕".to_string()).is_err()); //Invalid Mnemonic Chinese Simplified word
-        assert!(MnemonicLanguage::from(&"retro".to_string()).is_err()); //Invalid Mnemonic English word
-        assert!(MnemonicLanguage::from(&"flâner".to_string()).is_err()); //Invalid Mnemonic French word
-        assert!(MnemonicLanguage::from(&"meriggiare".to_string()).is_err()); //Invalid Mnemonic Italian word
-        assert!(MnemonicLanguage::from(&"おかあさん".to_string()).is_err()); //Invalid Mnemonic Japanese word
-        assert!(MnemonicLanguage::from(&"답정너".to_string()).is_err()); //Invalid Mnemonic Korean word
-        assert!(MnemonicLanguage::from(&"desvelado".to_string()).is_err()); //Invalid Mnemonic Spanish word
+        // Test Invalid Mnemonic words
+        assert!(MnemonicLanguage::from(&"馕".to_string()).is_err()); // Invalid Mnemonic Chinese Simplified word
+        assert!(MnemonicLanguage::from(&"retro".to_string()).is_err()); // Invalid Mnemonic English word
+        assert!(MnemonicLanguage::from(&"flâner".to_string()).is_err()); // Invalid Mnemonic French word
+        assert!(MnemonicLanguage::from(&"meriggiare".to_string()).is_err()); // Invalid Mnemonic Italian word
+        assert!(MnemonicLanguage::from(&"おかあさん".to_string()).is_err()); // Invalid Mnemonic Japanese word
+        assert!(MnemonicLanguage::from(&"답정너".to_string()).is_err()); // Invalid Mnemonic Korean word
+        assert!(MnemonicLanguage::from(&"desvelado".to_string()).is_err()); // Invalid Mnemonic Spanish word
     }
 
     #[test]
     fn test_find_index_from_word_or_word_from_index() {
-        //Encoding and Decoding using Chinese Simplified
+        // Encoding and Decoding using Chinese Simplified
         let desired_index = 45;
         let desired_word = MNEMONIC_CHINESE_SIMPLIFIED_WORDS[desired_index].to_string();
         match find_mnemonic_index_from_word(&desired_word, &MnemonicLanguage::ChineseSimplified) {
@@ -327,7 +335,7 @@ mod test {
             Err(_e) => assert!(false),
         }
 
-        //Encoding and Decoding using English Simplified
+        // Encoding and Decoding using English Simplified
         let desired_index = 1717;
         let desired_word = MNEMONIC_ENGLISH_WORDS[desired_index].to_string();
         match find_mnemonic_index_from_word(&desired_word, &MnemonicLanguage::English) {
@@ -339,7 +347,7 @@ mod test {
             Err(_e) => assert!(false),
         }
 
-        //Encoding and Decoding using French Simplified
+        // Encoding and Decoding using French Simplified
         let desired_index = 824;
         let desired_word = MNEMONIC_FRENCH_WORDS[desired_index].to_string();
         match find_mnemonic_index_from_word(&desired_word, &MnemonicLanguage::French) {
@@ -351,7 +359,7 @@ mod test {
             Err(_e) => assert!(false),
         }
 
-        //Encoding and Decoding using Italian Simplified
+        // Encoding and Decoding using Italian Simplified
         let desired_index = 1123;
         let desired_word = MNEMONIC_ITALIAN_WORDS[desired_index].to_string();
         match find_mnemonic_index_from_word(&desired_word, &MnemonicLanguage::Italian) {
@@ -363,7 +371,7 @@ mod test {
             Err(_e) => assert!(false),
         }
 
-        //Encoding and Decoding using Japanese Simplified
+        // Encoding and Decoding using Japanese Simplified
         let desired_index = 1856;
         let desired_word = MNEMONIC_JAPANESE_WORDS[desired_index].to_string();
         match find_mnemonic_index_from_word(&desired_word, &MnemonicLanguage::Japanese) {
@@ -375,7 +383,7 @@ mod test {
             Err(_e) => assert!(false),
         }
 
-        //Encoding and Decoding using Korean Simplified
+        // Encoding and Decoding using Korean Simplified
         let desired_index = 345;
         let desired_word = MNEMONIC_KOREAN_WORDS[desired_index].to_string();
         match find_mnemonic_index_from_word(&desired_word, &MnemonicLanguage::Korean) {
@@ -387,7 +395,7 @@ mod test {
             Err(_e) => assert!(false),
         }
 
-        //Encoding and Decoding using Spanish Simplified
+        // Encoding and Decoding using Spanish Simplified
         let desired_index = 345;
         let desired_word = MNEMONIC_SPANISH_WORDS[desired_index].to_string();
         match find_mnemonic_index_from_word(&desired_word, &MnemonicLanguage::Spanish) {
@@ -410,7 +418,7 @@ mod test {
                     let mismatched_bytes =
                         secretkey_bytes.iter().zip(mnemonic_bytes.iter()).filter(|&(a, b)| a != b).count();
                     assert_eq!(mismatched_bytes, 0);
-                }
+                },
                 Err(_e) => assert!(false),
             },
             Err(_e) => assert!(false),
@@ -419,26 +427,26 @@ mod test {
 
     #[test]
     fn test_secretkey_to_mnemonic_and_from_mnemonic() {
-        //Valid Mnemonic sequence
+        // Valid Mnemonic sequence
         let mut rng = rand::OsRng::new().unwrap();
         let desired_k = SecretKey::random(&mut rng);
         match desired_k.to_mnemonic(&MnemonicLanguage::Japanese) {
             Ok(mnemonic_seq) => {
-                //Language not known
+                // Language not known
                 match SecretKey::from_mnemonic(&mnemonic_seq) {
                     Ok(mnemonic_k) => assert_eq!(desired_k, mnemonic_k),
                     Err(_e) => assert!(false),
                 }
-                //Language known
+                // Language known
                 match SecretKey::from_mnemonic_with_language(&mnemonic_seq, &MnemonicLanguage::Japanese) {
                     Ok(mnemonic_k) => assert_eq!(desired_k, mnemonic_k),
                     Err(_e) => assert!(false),
                 }
-            }
+            },
             Err(_e) => assert!(false),
         }
 
-        //Invalid Mnemonic sequence
+        // Invalid Mnemonic sequence
         let mnemonic_seq = vec![
             "clever", "jaguar", "bus", "engage", "oil", "august", "media", "high", "trick", "remove", "tiny", "join",
             "item", "tobacco", "orange", "pny", "tomorrow", "also", "dignity", "giraffe", "little", "board", "army",
@@ -446,15 +454,49 @@ mod test {
         .iter()
         .map(|x| x.to_string())
         .collect::<Vec<String>>();
-        //Language not known
+        // Language not known
         match SecretKey::from_mnemonic(&mnemonic_seq) {
             Ok(_k) => assert!(false),
             Err(_e) => assert!(true),
         }
-        //Language known
+        // Language known
         match SecretKey::from_mnemonic_with_language(&mnemonic_seq, &MnemonicLanguage::Japanese) {
             Ok(_k) => assert!(false),
             Err(_e) => assert!(true),
         }
     }
+
+    #[test]
+    fn test_temp() {
+        let mut s: String = "Hello, world! \u{0041} \u{24B6}".to_string();
+        println!("{}", s);
+        let s2: String = s
+            .as_str()
+            .chars()
+            .map(|x| match x {
+                'A' | '\u{24B6}' | '\u{FF21}' | '\u{00C0}' | '\u{00C1}' | '\u{00C2}' | '\u{1EA6}' | '\u{1EA4}' |
+                '\u{1EAA}' | '\u{1EA8}' | '\u{00C3}' | '\u{0100}' | '\u{0102}' | '\u{1EB0}' | '\u{1EAE}' |
+                '\u{1EB4}' | '\u{1EB2}' | '\u{0226}' | '\u{01E0}' | '\u{00C4}' | '\u{01DE}' | '\u{1EA2}' |
+                '\u{00C5}' | '\u{01FA}' | '\u{01CD}' | '\u{0200}' | '\u{0202}' | '\u{1EA0}' | '\u{1EAC}' |
+                '\u{1EB6}' | '\u{1E00}' | '\u{0104}' | '\u{023A}' | '\u{2C6F}' => 'A',
+                'B' => 'B',
+                _ => x,
+            })
+            .collect();
+        println!("{}", s2);
+
+        // 'A' | '\u{0041}' | '\u{24B6}' | '\u{FF21}' | '\u{00C0}' | '\u{00C1}' | '\u{00C2}' | '\u{1EA6}'
+        // | '\u{1EA4}' | '\u{1EAA}' | '\u{1EA8}' | '\u{00C3}' | '\u{0100}' | '\u{0102}' | '\u{1EB0}'
+        // | '\u{1EAE}' | '\u{1EB4}' | '\u{1EB2}' | '\u{0226}' | '\u{01E0}' | '\u{00C4}' | '\u{01DE}'
+        // | '\u{1EA2}' | '\u{00C5}' | '\u{01FA}' | '\u{01CD}' | '\u{0200}' | '\u{0202}' | '\u{1EA0}'
+        // | '\u{1EAC}' | '\u{1EB6}' | '\u{1E00}' | '\u{0104}' | '\u{023A}' | '\u{2C6F}'
+
+        // let mut s="This is a test".to_String();
+        // s.replace(/[\uA732]/g,"A");
+
+        println!("test: {:}", "\u{0041}".to_string());
+
+        assert!(false);
+    }
+
 }

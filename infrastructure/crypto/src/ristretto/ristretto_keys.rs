@@ -32,11 +32,13 @@ use curve25519_dalek::{
     traits::MultiscalarMul,
 };
 use rand::{CryptoRng, Rng};
-use serde::de::{Deserialize, Deserializer, Visitor};
-use serde::ser::{Serialize, Serializer};
-use std::fmt;
+use serde::{
+    de::{Deserialize, Deserializer, Visitor},
+    ser::{Serialize, Serializer},
+};
 use std::{
     cmp::Ordering,
+    fmt,
     ops::{Add, Mul, Sub},
 };
 
@@ -65,9 +67,7 @@ pub struct RistrettoSecretKey(pub(crate) Scalar);
 /// Requires custom Serde Serialize and Deserialize for RistrettoSecretKey as Scalar do not implement these traits
 impl Serialize for RistrettoSecretKey {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
+    where S: Serializer {
         serializer.serialize_str(&self.to_hex())
     }
 }
@@ -82,9 +82,7 @@ impl<'de> Visitor<'de> for DeserializeVisitor {
     }
 
     fn visit_str<E>(self, str_data: &str) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
+    where E: serde::de::Error {
         match RistrettoSecretKey::from_hex(str_data) {
             Ok(k) => Ok(k),
             Err(parse_error) => Err(E::custom(format!("SecretKey parser error: {}", parse_error))),
@@ -94,9 +92,7 @@ impl<'de> Visitor<'de> for DeserializeVisitor {
 
 impl<'de> Deserialize<'de> for RistrettoSecretKey {
     fn deserialize<D>(deserializer: D) -> Result<RistrettoSecretKey, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
+    where D: Deserializer<'de> {
         deserializer.deserialize_string(DeserializeVisitor)
     }
 }
@@ -125,9 +121,7 @@ impl ByteArray for RistrettoSecretKey {
     /// not exactly 32 bytes long, `from_bytes` returns an error. This function is guaranteed to return a valid key
     /// in the group since it performs a mod _l_ on the input.
     fn from_bytes(bytes: &[u8]) -> Result<RistrettoSecretKey, ByteArrayError>
-    where
-        Self: Sized,
-    {
+    where Self: Sized {
         if bytes.len() != 32 {
             return Err(ByteArrayError::IncorrectLength);
         }
@@ -270,9 +264,7 @@ impl ByteArray for RistrettoPublicKey {
     /// * The byte array is not exactly 32 bytes
     /// * The byte array does not represent a valid (compressed) point on the ristretto255 curve
     fn from_bytes(bytes: &[u8]) -> Result<RistrettoPublicKey, ByteArrayError>
-    where
-        Self: Sized,
-    {
+    where Self: Sized {
         // Check the length here, because The Ristretto constructor panics rather than returning an error
         if bytes.len() != 32 {
             return Err(ByteArrayError::IncorrectLength);
