@@ -1,5 +1,4 @@
 #![recursion_limit = "128"]
-//#![feature(Hashable_ignore)]
 
 extern crate proc_macro;
 extern crate proc_macro2;
@@ -36,8 +35,11 @@ pub fn derive_hashable_ordering(tokens: TokenStream) -> TokenStream {
     gen.into()
 }
 
-/// This macro will provide a hasable implementation to the a given struct
-#[proc_macro_derive(Hashable, attributes(Digest, hash))]
+/// This macro will provide a Hashable implementation to the a given struct using a Digest implementing Hash function
+/// To use this provide #[derive(Hashable)] to the struct and #[Digest = "<Digest>"] with <Digest> being the included
+/// digest the macro should use to impl Hashable individual fields can be skipped by providing them with:
+/// #[Hashable(Ignore)]
+#[proc_macro_derive(Hashable, attributes(Digest, Hashable))]
 pub fn derive_hashable(tokens: TokenStream) -> TokenStream {
     let input = parse_macro_input!(tokens as DeriveInput);
     let object_name = &input.ident;
@@ -71,6 +73,7 @@ pub fn derive_hashable(tokens: TokenStream) -> TokenStream {
     gen.into()
 }
 
+// this function processes the individual fields of the hashable trait macro: derive_hashable
 fn handle_fields_for_hashable(item: &Data) -> proc_macro2::TokenStream {
     match item {
         Data::Struct(ref item) => {
@@ -81,9 +84,9 @@ fn handle_fields_for_hashable(item: &Data) -> proc_macro2::TokenStream {
                         for attr in &f.attrs {
                             match attr.interpret_meta().unwrap() {
                                 syn::Meta::NameValue(ref val) => {
-                                    if val.ident.to_string() == "hash" {
+                                    if val.ident.to_string() == "Hashable" {
                                         if let syn::Lit::Str(lit) = &val.lit {
-                                            if lit.value() == "Hashable_ignore" {
+                                            if lit.value() == "Ignore" {
                                                 do_we_ignore_field = true;
                                             }
                                         }
@@ -91,12 +94,12 @@ fn handle_fields_for_hashable(item: &Data) -> proc_macro2::TokenStream {
                                 },
                                 syn::Meta::List(ref val) => {
                                     // we have more than one property
-                                    if val.ident.to_string() == "hash" {
+                                    if val.ident.to_string() == "Hashable" {
                                         // we have a hash command here, lets search for the sub command
                                         for nestedmeta in val.nested.iter() {
                                             if let syn::NestedMeta::Meta(meta) = nestedmeta {
                                                 if let syn::Meta::Word(ref val) = meta {
-                                                    if val.to_string() == "Hashable_ignore" {
+                                                    if val.to_string() == "Ignore" {
                                                         do_we_ignore_field = true;
                                                     }
                                                 }
