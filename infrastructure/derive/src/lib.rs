@@ -55,7 +55,24 @@ pub fn derive_hashable(tokens: TokenStream) -> TokenStream {
         };
     }
     let item = input.data;
-    let fields_text = match item {
+    let fields_text = handle_fields_for_hashable(&item);
+
+    let digest = digest.expect("Could not find Digest attribute"); // this is for the error, if the Digest was not given, this error message will be displayed
+    let varname = Ident::new(&digest, Span::call_site());
+    let gen = quote! {
+        impl  Hashable for #object_name  {
+            fn hash(&self) -> Vec<u8> {
+                let mut hasher = <#varname>::new();
+                #fields_text
+                hasher.result().to_vec()
+            }
+        }
+    };
+    gen.into()
+}
+
+fn handle_fields_for_hashable(item: &Data) -> proc_macro2::TokenStream {
+    match item {
         Data::Struct(ref item) => {
             match item.fields {
                 Fields::Named(ref fields) => {
@@ -121,18 +138,5 @@ pub fn derive_hashable(tokens: TokenStream) -> TokenStream {
             }
         },
         Data::Enum(_) | Data::Union(_) => unimplemented!(),
-    };
-
-    let digest = digest.expect("Could not find Digest attribute");
-    let varname = Ident::new(&digest, Span::call_site());
-    let gen = quote! {
-        impl  Hashable for #object_name  {
-            fn hash(&self) -> Vec<u8> {
-                let mut hasher = <#varname>::new();
-                #fields_text
-                hasher.result().to_vec()
-            }
-        }
-    };
-    gen.into()
+    }
 }
