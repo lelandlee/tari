@@ -36,6 +36,6 @@ pub struct BlockchainState {
 
 impl BlockchainState {
     pub fn new() -> BlockchainState {
-        BlockchainState { _outputs: MerkleMountainRange::new(), _kernals: MerkleMountainRange::new() }
+        BlockchainState { _outputs: MerkleMountainRange::new(), _kernels: MerkleMountainRange::new() }
     }
 }
