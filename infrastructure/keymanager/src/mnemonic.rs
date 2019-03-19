@@ -28,6 +28,7 @@ use crypto::{
 use derive_error::Error;
 use mnemonic_wordlists::*;
 use std::slice::Iter;
+use diacretics::*;
 
 /// The Mnemonic system simplifies the encoding and decoding of a secret key into and from a Mnemonic word sequence
 /// It can autodetect the language of the Mnemonic word sequence
@@ -103,12 +104,12 @@ fn find_mnemonic_index_from_word(word: &String, language: &MnemonicLanguage) -> 
         MnemonicLanguage::ChineseSimplified => {
             search_result = MNEMONIC_CHINESE_SIMPLIFIED_WORDS.binary_search(&lowercase_word.as_str())
         },
-        MnemonicLanguage::English => search_result = MNEMONIC_ENGLISH_WORDS.binary_search(&lowercase_word.as_str()),
-        MnemonicLanguage::French => search_result = MNEMONIC_FRENCH_WORDS.binary_search(&lowercase_word.as_str()),
-        MnemonicLanguage::Italian => search_result = MNEMONIC_ITALIAN_WORDS.binary_search(&lowercase_word.as_str()),
+        MnemonicLanguage::English => search_result = MNEMONIC_ENGLISH_WORDS.binary_search(&remove_diacretics(&lowercase_word).as_str()),
+        MnemonicLanguage::French => search_result = MNEMONIC_FRENCH_WORDS.binary_search(&remove_diacretics(&lowercase_word).as_str()),
+        MnemonicLanguage::Italian => search_result = MNEMONIC_ITALIAN_WORDS.binary_search(&remove_diacretics(&lowercase_word).as_str()),
         MnemonicLanguage::Japanese => search_result = MNEMONIC_JAPANESE_WORDS.binary_search(&lowercase_word.as_str()),
         MnemonicLanguage::Korean => search_result = MNEMONIC_KOREAN_WORDS.binary_search(&lowercase_word.as_str()),
-        MnemonicLanguage::Spanish => search_result = MNEMONIC_SPANISH_WORDS.binary_search(&lowercase_word.as_str()),
+        MnemonicLanguage::Spanish => search_result = MNEMONIC_SPANISH_WORDS.binary_search(&remove_diacretics(&lowercase_word).as_str()),
     }
     match search_result {
         Ok(v) => Ok(v),
@@ -465,38 +466,4 @@ mod test {
             Err(_e) => assert!(true),
         }
     }
-
-    #[test]
-    fn test_temp() {
-        let mut s: String = "Hello, world! \u{0041} \u{24B6}".to_string();
-        println!("{}", s);
-        let s2: String = s
-            .as_str()
-            .chars()
-            .map(|x| match x {
-                'A' | '\u{24B6}' | '\u{FF21}' | '\u{00C0}' | '\u{00C1}' | '\u{00C2}' | '\u{1EA6}' | '\u{1EA4}' |
-                '\u{1EAA}' | '\u{1EA8}' | '\u{00C3}' | '\u{0100}' | '\u{0102}' | '\u{1EB0}' | '\u{1EAE}' |
-                '\u{1EB4}' | '\u{1EB2}' | '\u{0226}' | '\u{01E0}' | '\u{00C4}' | '\u{01DE}' | '\u{1EA2}' |
-                '\u{00C5}' | '\u{01FA}' | '\u{01CD}' | '\u{0200}' | '\u{0202}' | '\u{1EA0}' | '\u{1EAC}' |
-                '\u{1EB6}' | '\u{1E00}' | '\u{0104}' | '\u{023A}' | '\u{2C6F}' => 'A',
-                'B' => 'B',
-                _ => x,
-            })
-            .collect();
-        println!("{}", s2);
-
-        // 'A' | '\u{0041}' | '\u{24B6}' | '\u{FF21}' | '\u{00C0}' | '\u{00C1}' | '\u{00C2}' | '\u{1EA6}'
-        // | '\u{1EA4}' | '\u{1EAA}' | '\u{1EA8}' | '\u{00C3}' | '\u{0100}' | '\u{0102}' | '\u{1EB0}'
-        // | '\u{1EAE}' | '\u{1EB4}' | '\u{1EB2}' | '\u{0226}' | '\u{01E0}' | '\u{00C4}' | '\u{01DE}'
-        // | '\u{1EA2}' | '\u{00C5}' | '\u{01FA}' | '\u{01CD}' | '\u{0200}' | '\u{0202}' | '\u{1EA0}'
-        // | '\u{1EAC}' | '\u{1EB6}' | '\u{1E00}' | '\u{0104}' | '\u{023A}' | '\u{2C6F}'
-
-        // let mut s="This is a test".to_String();
-        // s.replace(/[\uA732]/g,"A");
-
-        println!("test: {:}", "\u{0041}".to_string());
-
-        assert!(false);
-    }
-
 }

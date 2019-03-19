@@ -11,3 +11,4 @@ pub mod common;
 pub mod keymanager;
 pub mod mnemonic;
 pub mod mnemonic_wordlists;
+pub mod diacretics;
