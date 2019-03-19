@@ -20,14 +20,12 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 // USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use common::*;
+use crate::{common::*, diacritics::*, mnemonic_wordlists::*};
 use crypto::{
     common::{ByteArray, ByteArrayError},
     ristretto::RistrettoSecretKey as SecretKey,
 };
 use derive_error::Error;
-use diacritics::*;
-use mnemonic_wordlists::*;
 use std::slice::Iter;
 
 /// The Mnemonic system simplifies the encoding and decoding of a secret key into and from a Mnemonic word sequence
@@ -44,16 +42,9 @@ pub enum MnemonicError {
     // A mnemonic word does not exist for the requested index
     IndexOutOfBounds,
     // A problem encountered constructing a secret key from bytes or mnemonic sequence
-    ByteArrayError,
+    ByteArrayError(ByteArrayError),
     // Encoding and decoding a mnemonic sequence from bytes require exactly 32 bytes or 24 mnemonic words
     ConversionProblem,
-}
-
-impl From<ByteArrayError> for MnemonicError {
-    /// Converts from ByteArrayError to MnemonicError
-    fn from(_e: ByteArrayError) -> Self {
-        MnemonicError::ByteArrayError
-    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -189,7 +180,7 @@ pub fn to_bytes_with_language(
     for curr_word in mnemonic_seq {
         match find_mnemonic_index_from_word(curr_word, &language) {
             Ok(index) => {
-                let mut curr_bits = uint_to_bits(index, 11);
+                let curr_bits = uint_to_bits(index, 11);
                 bits.extend(curr_bits.iter().map(|&i| i));
             },
             Err(err) => return Err(err),
@@ -266,8 +257,8 @@ impl Mnemonic for SecretKey {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::mnemonic;
     use crypto::{common::ByteArray, keys::SecretKeyFactory, ristretto::RistrettoSecretKey as SecretKey};
-    use mnemonic;
     use rand;
 
     #[test]
@@ -440,7 +431,6 @@ mod test {
         let desired_k = SecretKey::random(&mut rng);
         match desired_k.to_mnemonic(&MnemonicLanguage::Japanese) {
             Ok(mnemonic_seq) => {
-                // Language not known
                 match SecretKey::from_mnemonic(&mnemonic_seq) {
                     Ok(mnemonic_k) => assert_eq!(desired_k, mnemonic_k),
                     Err(_e) => assert!(false),

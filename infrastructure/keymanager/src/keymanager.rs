@@ -20,15 +20,16 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 // USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use common::*;
+use crate::{common::*, mnemonic::*};
 use crypto::{
     common::{ByteArray, ByteArrayError},
     keys::SecretKeyFactory,
     ristretto::RistrettoSecretKey as SecretKey,
 };
 use derive_error::Error;
-use mnemonic::*;
-use rand;
+// use rand;
+use rand::{CryptoRng, Rng};
+use serde_derive::{Deserialize, Serialize};
 use std::{
     fs::File,
     io::{prelude::*, ErrorKind},
@@ -37,29 +38,15 @@ use std::{
 #[derive(Debug, Error)]
 pub enum KeyManagerError {
     // Could not convert into byte array
-    ByteArrayError,
+    ByteArrayError(ByteArrayError),
     // Could not convert provided Mnemonic into master key
-    DecodeMnemonic,
+    MnemonicError(MnemonicError),
     // The specified backup file could not be opened
     FileOpen,
     // Could not read from backup file
     FileRead,
     // Problem deserializing JSON into a new KeyManager
     Deserialize,
-}
-
-impl From<ByteArrayError> for KeyManagerError {
-    /// Converts from ByteArrayError to KeyManagerError
-    fn from(_e: ByteArrayError) -> Self {
-        KeyManagerError::ByteArrayError
-    }
-}
-
-impl From<MnemonicError> for KeyManagerError {
-    /// Converts from MnemonicError to KeyManagerError
-    fn from(_e: MnemonicError) -> Self {
-        KeyManagerError::DecodeMnemonic
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -77,9 +64,8 @@ pub struct KeyManager {
 
 impl KeyManager {
     /// Creates a new KeyManager with a new randomly selected master_key
-    pub fn new() -> KeyManager {
-        let mut rng = rand::OsRng::new().unwrap();
-        KeyManager { master_key: SecretKey::random(&mut rng), branch_seed: "".to_string(), primary_key_index: 0 }
+    pub fn new<R: CryptoRng + Rng>(rng: &mut R) -> KeyManager {
+        KeyManager { master_key: SecretKey::random(rng), branch_seed: "".to_string(), primary_key_index: 0 }
     }
 
     /// Constructs a KeyManager from known parts
@@ -163,13 +149,14 @@ impl KeyManager {
 
 #[cfg(test)]
 mod test {
-    use keymanager::*;
+    use crate::keymanager::*;
     use std::fs::remove_file;
 
     #[test]
     fn test_new_keymanager() {
-        let km1 = KeyManager::new();
-        let km2 = KeyManager::new();
+        let mut rng = rand::OsRng::new().unwrap();
+        let km1 = KeyManager::new(&mut rng);
+        let km2 = KeyManager::new(&mut rng);
         assert_ne!(km1.master_key, km2.master_key);
     }
 
@@ -218,7 +205,8 @@ mod test {
 
     #[test]
     fn test_derive_and_next_key() {
-        let mut km = KeyManager::new();
+        let mut rng = rand::OsRng::new().unwrap();
+        let mut km = KeyManager::new(&mut rng);
         let next_key1_result = km.next_key();
         let next_key2_result = km.next_key();
         let desired_key_index1 = 1;
@@ -244,7 +232,8 @@ mod test {
 
     #[test]
     fn test_to_file_and_from_file() {
-        let desired_km = KeyManager::new();
+        let mut rng = rand::OsRng::new().unwrap();
+        let desired_km = KeyManager::new(&mut rng);
         let backup_filename = "test_km_backup.json".to_string();
         // Backup KeyManager to file
         match desired_km.to_file(&backup_filename) {
