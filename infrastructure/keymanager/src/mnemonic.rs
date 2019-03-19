@@ -26,9 +26,9 @@ use crypto::{
     ristretto::RistrettoSecretKey as SecretKey,
 };
 use derive_error::Error;
+use diacritics::*;
 use mnemonic_wordlists::*;
 use std::slice::Iter;
-use diacretics::*;
 
 /// The Mnemonic system simplifies the encoding and decoding of a secret key into and from a Mnemonic word sequence
 /// It can autodetect the language of the Mnemonic word sequence
@@ -103,13 +103,21 @@ fn find_mnemonic_index_from_word(word: &String, language: &MnemonicLanguage) -> 
         // language
         MnemonicLanguage::ChineseSimplified => {
             search_result = MNEMONIC_CHINESE_SIMPLIFIED_WORDS.binary_search(&lowercase_word.as_str())
-        },
-        MnemonicLanguage::English => search_result = MNEMONIC_ENGLISH_WORDS.binary_search(&remove_diacretics(&lowercase_word).as_str()),
-        MnemonicLanguage::French => search_result = MNEMONIC_FRENCH_WORDS.binary_search(&remove_diacretics(&lowercase_word).as_str()),
-        MnemonicLanguage::Italian => search_result = MNEMONIC_ITALIAN_WORDS.binary_search(&remove_diacretics(&lowercase_word).as_str()),
+        }
+        MnemonicLanguage::English => {
+            search_result = MNEMONIC_ENGLISH_WORDS.binary_search(&remove_diacritics(&lowercase_word).as_str())
+        }
+        MnemonicLanguage::French => {
+            search_result = MNEMONIC_FRENCH_WORDS.binary_search(&remove_diacritics(&lowercase_word).as_str())
+        }
+        MnemonicLanguage::Italian => {
+            search_result = MNEMONIC_ITALIAN_WORDS.binary_search(&remove_diacritics(&lowercase_word).as_str())
+        }
         MnemonicLanguage::Japanese => search_result = MNEMONIC_JAPANESE_WORDS.binary_search(&lowercase_word.as_str()),
         MnemonicLanguage::Korean => search_result = MNEMONIC_KOREAN_WORDS.binary_search(&lowercase_word.as_str()),
-        MnemonicLanguage::Spanish => search_result = MNEMONIC_SPANISH_WORDS.binary_search(&remove_diacretics(&lowercase_word).as_str()),
+        MnemonicLanguage::Spanish => {
+            search_result = MNEMONIC_SPANISH_WORDS.binary_search(&remove_diacritics(&lowercase_word).as_str())
+        }
     }
     match search_result {
         Ok(v) => Ok(v),
@@ -176,15 +184,14 @@ pub fn to_bytes(mnemonic_seq: &Vec<String>) -> Result<Vec<u8>, MnemonicError> {
 pub fn to_bytes_with_language(
     mnemonic_seq: &Vec<String>,
     language: &MnemonicLanguage,
-) -> Result<Vec<u8>, MnemonicError>
-{
+) -> Result<Vec<u8>, MnemonicError> {
     let mut bits: Vec<bool> = Vec::new();
     for curr_word in mnemonic_seq {
         match find_mnemonic_index_from_word(curr_word, &language) {
             Ok(index) => {
                 let mut curr_bits = uint_to_bits(index, 11);
                 bits.extend(curr_bits.iter().map(|&i| i));
-            },
+            }
             Err(err) => return Err(err),
         }
     }
@@ -216,8 +223,7 @@ pub fn to_secretkey(mnemonic_seq: &Vec<String>) -> Result<SecretKey, MnemonicErr
 pub fn to_secretkey_with_language(
     mnemonic_seq: &Vec<String>,
     language: &MnemonicLanguage,
-) -> Result<SecretKey, MnemonicError>
-{
+) -> Result<SecretKey, MnemonicError> {
     let bytes = to_bytes_with_language(mnemonic_seq, language)?;
     match SecretKey::from_bytes(&bytes) {
         Ok(k) => Ok(k),
@@ -245,8 +251,7 @@ impl Mnemonic for SecretKey {
     fn from_mnemonic_with_language(
         mnemonic_seq: &Vec<String>,
         language: &MnemonicLanguage,
-    ) -> Result<SecretKey, MnemonicError>
-    {
+    ) -> Result<SecretKey, MnemonicError> {
         (to_secretkey_with_language(mnemonic_seq, language))
     }
 
@@ -266,13 +271,13 @@ mod test {
     #[test]
     fn test_check_wordlists_sorted() {
         for i in 0..2047 {
-            if (MNEMONIC_CHINESE_SIMPLIFIED_WORDS[i] > MNEMONIC_CHINESE_SIMPLIFIED_WORDS[i + 1]) ||
-                (MNEMONIC_ENGLISH_WORDS[i] > MNEMONIC_ENGLISH_WORDS[i + 1]) ||
-                (MNEMONIC_FRENCH_WORDS[i] > MNEMONIC_FRENCH_WORDS[i + 1]) ||
-                (MNEMONIC_ITALIAN_WORDS[i] > MNEMONIC_ITALIAN_WORDS[i + 1]) ||
-                (MNEMONIC_JAPANESE_WORDS[i] > MNEMONIC_JAPANESE_WORDS[i + 1]) ||
-                (MNEMONIC_KOREAN_WORDS[i] > MNEMONIC_KOREAN_WORDS[i + 1]) ||
-                (MNEMONIC_SPANISH_WORDS[i] > MNEMONIC_SPANISH_WORDS[i + 1])
+            if (MNEMONIC_CHINESE_SIMPLIFIED_WORDS[i] > MNEMONIC_CHINESE_SIMPLIFIED_WORDS[i + 1])
+                || (MNEMONIC_ENGLISH_WORDS[i] > MNEMONIC_ENGLISH_WORDS[i + 1])
+                || (MNEMONIC_FRENCH_WORDS[i] > MNEMONIC_FRENCH_WORDS[i + 1])
+                || (MNEMONIC_ITALIAN_WORDS[i] > MNEMONIC_ITALIAN_WORDS[i + 1])
+                || (MNEMONIC_JAPANESE_WORDS[i] > MNEMONIC_JAPANESE_WORDS[i + 1])
+                || (MNEMONIC_KOREAN_WORDS[i] > MNEMONIC_KOREAN_WORDS[i + 1])
+                || (MNEMONIC_SPANISH_WORDS[i] > MNEMONIC_SPANISH_WORDS[i + 1])
             {
                 assert!(false);
             }
@@ -419,7 +424,7 @@ mod test {
                     let mismatched_bytes =
                         secretkey_bytes.iter().zip(mnemonic_bytes.iter()).filter(|&(a, b)| a != b).count();
                     assert_eq!(mismatched_bytes, 0);
-                },
+                }
                 Err(_e) => assert!(false),
             },
             Err(_e) => assert!(false),
@@ -443,7 +448,7 @@ mod test {
                     Ok(mnemonic_k) => assert_eq!(desired_k, mnemonic_k),
                     Err(_e) => assert!(false),
                 }
-            },
+            }
             Err(_e) => assert!(false),
         }
 
