@@ -23,15 +23,22 @@
 // Portions of this file were originally copyrighted (c) 2018 The Grin Developers, issued under the Apache License,
 // Version 2.0, available at http://www.apache.org/licenses/LICENSE-2.0.
 
-use crate::{pow::ProofOfWork, types::BlindingFactor};
+use crate::{
+    pow::ProofOfWork,
+    types::{BlindingFactor, Hash},
+};
 use chrono::{DateTime, Utc};
+use crypto::common::Blake256;
+use derive::Hashable;
+use digest::Digest;
 use merklemountainrange::merklenode::Hashable;
-use types::Hasher;
 
 type BlockHash = [u8; 32];
 
 /// The BlockHeader contains all the metadata for the block, including proof of work, a link to the previous block
 /// and the transaction kernels.
+#[derive(Hashable)]
+#[Digest = "Blake256"]
 pub struct BlockHeader {
     /// Version of the block
     pub version: u16,
@@ -57,15 +64,5 @@ impl BlockHeader {
     /// This function will validate the proof of work in the header
     pub fn validate_pow(&self) -> bool {
         unimplemented!();
-    }
-}
-
-/// Implement the canonical hashing function for blockheader
-impl Hashable for TransactionInput {
-    fn hash(&self) -> Vec<u8> {
-        let mut hasher = Hasher::new();
-        hasher.input(vec![self.features.bits]);
-        hasher.input(self.commitment.to_bytes());
-        hasher.result().to_vec()
     }
 }

@@ -22,37 +22,34 @@
 
 // This file is used to store the current blockchain state
 
-
 /// The BlockchainState struct keeps record of the current UTXO, total kernels and headers.
 use merklemountainrange::mmr::*;
-use tari_core::transaction::{TransactionKernel, TransactionOutput};
-use tari_core::block::Block;
-use tari_core::blockheader::BlockHeader;
-use tari_core::types::Hasher;
-
+use tari_core::{
+    block::Block,
+    blockheader::BlockHeader,
+    transaction::{TransactionKernel, TransactionOutput},
+    types::Hasher,
+};
 
 pub struct BlockchainState {
-<<<<<<< HEAD
     _outputs: MerkleMountainRange<TransactionOutput, Hasher>,
-    _kernals: MerkleMountainRange<TransactionKernel, Hasher>,
     _headers: MerkleMountainRange<BlockHeader, Hasher>,
-=======
-    _outputs: MerkleMountainRange<TransactionOutput, BlockHash>,
     _kernels: MerkleMountainRange<TransactionKernel, BlockHash>,
->>>>>>> SW-swop-transaction-to-mmr-hashable
 }
 
 impl BlockchainState {
     /// This function creates a new blockchainstate, this will keep track of the current state of the blockchain.
     pub fn new() -> BlockchainState {
-<<<<<<< HEAD
-        BlockchainState { _outputs: MerkleMountainRange::new(), _kernals: MerkleMountainRange::new(), _headers::MerkleMountainRange::new(), }
-=======
-        BlockchainState { _outputs: MerkleMountainRange::new(), _kernels: MerkleMountainRange::new() }
->>>>>>> SW-swop-transaction-to-mmr-hashable
+        BlockchainState {
+            _outputs: MerkleMountainRange::new(),
+            _kernels: MerkleMountainRange::new(),
+            _headers: MerkleMountainRange::new(),
+        }
     }
 
-/// This function consumes a new block
-/// The if it returns OK(), the block was accepted and proccessed, else it returns an error why the block was rejected
-    pub fn add_block(new_block : Block) -> Result<_,BlockProrror>
+    // This function consumes a new block
+    // The if it returns OK(), the block was accepted and proccessed, else it returns an error why the block was
+    // rejected   pub fn add_block(new_block : Block) -> Result<_,BlockProrror>{
+    //       unimplemented!
+    //   }
 }
