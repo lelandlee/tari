@@ -92,7 +92,8 @@ impl KeyManager {
         seed_phrase: String,
         branch_seed: String,
         primary_key_index: usize,
-    ) -> Result<KeyManager, KeyManagerError> {
+    ) -> Result<KeyManager, KeyManagerError>
+    {
         match SecretKey::from_bytes(sha256(seed_phrase.into_bytes()).as_slice()) {
             Ok(master_key) => Ok(KeyManager { master_key, branch_seed, primary_key_index }),
             Err(e) => Err(KeyManagerError::from(e)),
@@ -105,7 +106,8 @@ impl KeyManager {
         mnemonic_seq: &Vec<String>,
         branch_seed: String,
         primary_key_index: usize,
-    ) -> Result<KeyManager, KeyManagerError> {
+    ) -> Result<KeyManager, KeyManagerError>
+    {
         match SecretKey::from_mnemonic(mnemonic_seq) {
             Ok(master_key) => Ok(KeyManager { master_key, branch_seed, primary_key_index }),
             Err(e) => Err(KeyManagerError::from(e)),
@@ -153,7 +155,7 @@ impl KeyManager {
             Ok(json_data) => {
                 file_handle.write_all(json_data.as_bytes())?;
                 Ok(())
-            }
+            },
             Err(_) => Err(std::io::Error::new(ErrorKind::Other, "JSON parse error")),
         }
     }
@@ -223,10 +225,10 @@ mod test {
         let desired_key_index2 = 2;
         let derived_key1_result = km.derive_key(desired_key_index1);
         let derived_key2_result = km.derive_key(desired_key_index2);
-        if next_key1_result.is_ok()
-            && next_key2_result.is_ok()
-            && derived_key1_result.is_ok()
-            && derived_key2_result.is_ok()
+        if next_key1_result.is_ok() &&
+            next_key2_result.is_ok() &&
+            derived_key1_result.is_ok() &&
+            derived_key2_result.is_ok()
         {
             let next_key1 = next_key1_result.unwrap();
             let next_key2 = next_key2_result.unwrap();
@@ -245,15 +247,19 @@ mod test {
         let desired_km = KeyManager::new();
         let backup_filename = "test_km_backup.json".to_string();
         // Backup KeyManager to file
-        desired_km.to_file(&backup_filename);
-        // Restore KeyManager from file
-        match KeyManager::from_file(&backup_filename) {
-            Ok(backup_km) => {
-                // Remove temp keymanager backup file
-                remove_file(backup_filename).unwrap();
+        match desired_km.to_file(&backup_filename) {
+            Ok(_v) => {
+                // Restore KeyManager from file
+                match KeyManager::from_file(&backup_filename) {
+                    Ok(backup_km) => {
+                        // Remove temp keymanager backup file
+                        remove_file(backup_filename).unwrap();
 
-                assert_eq!(desired_km, backup_km);
-            }
+                        assert_eq!(desired_km, backup_km);
+                    },
+                    Err(_e) => assert!(false),
+                };
+            },
             Err(_e) => assert!(false),
         };
     }
