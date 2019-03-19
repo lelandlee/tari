@@ -32,7 +32,6 @@ use std::slice::Iter;
 
 /// The Mnemonic system simplifies the encoding and decoding of a secret key into and from a Mnemonic word sequence
 /// It can autodetect the language of the Mnemonic word sequence
-// TODO: Replace special characters of wordsets and input strings with common characters
 // TODO: Develop a language autodetection mechanism to distinguish between ChineseTraditional and ChineseSimplified
 
 #[derive(Debug, Error)]
